@@ -33,6 +33,7 @@ public final class Main {
                     a.getInt("hours", 120),
                     a.get("out", "."));
             case "db-probe" -> DbProbe.run(a);
+            case "stage" -> Stage.run(a);
             default -> {
                 System.err.println("未知命令: " + cmd);
                 usage();
@@ -63,6 +64,11 @@ public final class Main {
 
                   db-probe     数据库体检：表规模、索引、典型查询耗时
                     --symbol BTCUSDT   --interval 1h   --limit 72
+
+                  stage        阶段识别：吸筹 / 试盘 / 拉升 / 派发 / 砸盘 / 冷却
+                    --top 30        每个阶段最多列多少个
+                    --min-score 40  只输出达到阈值的结果
+                    --symbol AINUSDT  单币详情（含证据）
 
                 密码: --db-pass，或环境变量 DB_PASSWORD
                 """);
