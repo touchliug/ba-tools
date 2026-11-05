@@ -28,7 +28,7 @@ public final class Main {
         switch (cmd) {
             case "backfill" -> Backfill.run(rest);
             case "pattern" -> PatternStats.run(a.get("out", "."));
-            case "ain-review" -> AinReview.run(
+            case "events", "ain-review" -> AinReview.run(
                     a.get("symbol", "AINUSDT"),
                     a.getInt("hours", 120),
                     a.get("out", "."));
@@ -63,6 +63,9 @@ public final class Main {
                   ain-review   单币逐小时复盘，识别插针/挤空/双向扫
                     --symbol AINUSDT   --hours 120   --out 输出目录
 
+                  events       单币逐小时事件：插针 / 挤空 / 双向扫（原 ain-review）
+                    --symbol AINUSDT   --hours 120   --out 输出目录
+
                   db-probe     数据库体检：表规模、索引、典型查询耗时
                     --symbol BTCUSDT   --interval 1h   --limit 72
 
@@ -74,6 +77,7 @@ public final class Main {
                   backtest     阶段回测：各阶段标记后 N 天的收益分布 vs 基线
                     --lookback 120  回看天数
                     --horizon 7     前向天数
+                    --stride 7      采样步长（默认 = horizon，保证样本不重叠）
 
                 密码: --db-pass，或环境变量 DB_PASSWORD
                 """);

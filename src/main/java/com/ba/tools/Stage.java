@@ -92,7 +92,15 @@ final class Stage {
     static Map<String, List<Day>> load(Args a) throws Exception {
         long since = System.currentTimeMillis() - (long) LOOKBACK * DAY;
 
-        // 1d K 线
+        // 下架合约：历史还在，但「拉升/派发」多为流动性枯竭前的挣扎，扫盘与回测都应排除
+        java.util.Set<String> delisted = new java.util.HashSet<>();
+        try (Connection cn = Db.open(a);
+             PreparedStatement ps = cn.prepareStatement(
+                     "SELECT symbol FROM symbols WHERE status <> 'TRADING'");
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) delisted.add(rs.getString(1));
+        }
+
         Map<String, List<double[]>> k = new HashMap<>();   // t, close, high, low, vol
         try (Connection cn = Db.open(a);
              PreparedStatement ps = cn.prepareStatement(
@@ -102,7 +110,9 @@ final class Stage {
             ps.setLong(1, since);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    k.computeIfAbsent(rs.getString(1), x -> new ArrayList<>())
+                    String sym = rs.getString(1);
+                    if (delisted.contains(sym)) continue;
+                    k.computeIfAbsent(sym, x -> new ArrayList<>())
                             .add(new double[]{rs.getLong(2), rs.getDouble(3), rs.getDouble(4), rs.getDouble(5), rs.getDouble(6)});
                 }
             }
