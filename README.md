@@ -1,8 +1,16 @@
-﻿# ba-tools
+# ba-tools
 
 币安合约数据小工具集，配合 [ba-sync](https://github.com/touchliug/ba-sync) / [ba-analysis](https://github.com/touchliug/ba-analysis) 使用。
 
-四个命令，一个 jar，只读/只写自己的库，不动生产配置。
+一个 jar 多个命令，只读写自己的库，不动生产配置。
+
+## 目录
+
+| 路径 | 内容 |
+|---|---|
+| `src/` | 工具本体（backfill / stage / backtest / events / pattern / db-probe） |
+| [`docs/`](docs/) | 分析文档：[单币分析 SOP](docs/单币分析SOP.md)、[会话纪要](docs/币安数据与交易分析-会话纪要.md) |
+| [`scripts/maintenance/`](scripts/maintenance/) | 一次性运维脚本（下架币清理、存活检查、表结构校验） |
 
 ## 构建
 
