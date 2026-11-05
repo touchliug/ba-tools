@@ -90,9 +90,16 @@ final class Stage {
     // ---------------- 数据加载 ----------------
 
     static Map<String, List<Day>> load(Args a) throws Exception {
+        return load(a, false);
+    }
+
+    /**
+     * @param includeDelisted 回测时必须为 true —— 否则只剩"活到今天"的币，构成幸存者偏差；
+     *                        实盘扫描时为 false，因为下架币的"拉升/派发"多是流动性枯竭前的挣扎。
+     */
+    static Map<String, List<Day>> load(Args a, boolean includeDelisted) throws Exception {
         long since = System.currentTimeMillis() - (long) LOOKBACK * DAY;
 
-        // 下架合约：历史还在，但「拉升/派发」多为流动性枯竭前的挣扎，扫盘与回测都应排除
         java.util.Set<String> delisted = new java.util.HashSet<>();
         try (Connection cn = Db.open(a);
              PreparedStatement ps = cn.prepareStatement(
@@ -111,7 +118,7 @@ final class Stage {
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     String sym = rs.getString(1);
-                    if (delisted.contains(sym)) continue;
+                    if (!includeDelisted && delisted.contains(sym)) continue;
                     k.computeIfAbsent(sym, x -> new ArrayList<>())
                             .add(new double[]{rs.getLong(2), rs.getDouble(3), rs.getDouble(4), rs.getDouble(5), rs.getDouble(6)});
                 }

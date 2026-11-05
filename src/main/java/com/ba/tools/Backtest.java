@@ -33,7 +33,7 @@ final class Backtest {
         int stride = Math.max(1, a.getInt("stride", horizon));
         int boot = a.getInt("bootstrap", 500);
 
-        Map<String, List<Stage.Day>> series = Stage.load(a);
+        Map<String, List<Stage.Day>> series = Stage.load(a, true);
         double[] btc = Stage.btcReturns(series);
         System.out.printf("加载 %d 个币，回看 %d 天，前向 %d 天，步长 %d 天%s%n%n",
                 series.size(), lookbackDays, horizon, stride,
