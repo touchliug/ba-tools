@@ -34,6 +34,7 @@ public final class Main {
                     a.get("out", "."));
             case "db-probe" -> DbProbe.run(a);
             case "stage" -> Stage.run(a);
+            case "backtest" -> Backtest.run(a);
             default -> {
                 System.err.println("未知命令: " + cmd);
                 usage();
@@ -66,9 +67,13 @@ public final class Main {
                     --symbol BTCUSDT   --interval 1h   --limit 72
 
                   stage        阶段识别：吸筹 / 试盘 / 拉升 / 派发 / 砸盘 / 冷却
-                    --top 30        每个阶段最多列多少个
-                    --min-score 40  只输出达到阈值的结果
-                    --symbol AINUSDT  单币详情（含证据）
+                    --top 30        最多列出多少个
+                    --min-match 60  只输出匹配度达标的结果
+                    --symbol AINUSDT  单币详情（含证据与证伪条件）
+
+                  backtest     阶段回测：各阶段标记后 N 天的收益分布 vs 基线
+                    --lookback 120  回看天数
+                    --horizon 7     前向天数
 
                 密码: --db-pass，或环境变量 DB_PASSWORD
                 """);
