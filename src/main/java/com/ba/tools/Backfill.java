@@ -77,7 +77,7 @@ public final class Backfill {
 
         String conn = "jdbc:mysql://" + dbHost + ":" + dbPort + "/" + dbName
                 + "?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
-                + "&connectTimeout=15000&socketTimeout=600000&rewriteBatchedStatements=true";
+                + "&connectTimeout=15000&socketTimeout=600000&rewriteBatchedStatements=true&autoReconnect=true&tcpKeepAlive=true";
 
         log("DB   = %s", conn.replaceAll("password=[^&]*", ""));
         log("目标 = 最近 %d 年, interval=%s, 窗口起点 %s", years, interval, isoDay(targetStart));
@@ -237,8 +237,11 @@ public final class Backfill {
         }
         log("目标窗口约 %.0f 根/币", (double) needBars);
         log("已达标=%d  需补=%d  库里完全没有=%d  合计=%d", ok, need, listedLater, symbols.size());
-        log("预计请求数 ≈ %d (每次最多 %d 根), 按 %.1f req/s 约需 %.0f 秒",
-                need + listedLater, LIMIT, rps, (need + listedLater) / rps);
+        // 单次最多 LIMIT 根, 所以每个币要翻 ceil(needBars / LIMIT) 页 —— 之前低估成了 1 页
+        int pagesPerSymbol = (int) Math.ceil(needBars / (double) LIMIT);
+        long reqs = (long) pagesPerSymbol * (need + listedLater);
+        log("预计请求数 ≈ %d (= %d 页/币 × %d 币), 按 %.1f req/s 约需 %.0f 秒 (%.0f 分钟)",
+                reqs, pagesPerSymbol, need + listedLater, rps, reqs / rps, reqs / rps / 60.0);
     }
 
     static void coverage(Connection cn) throws SQLException {

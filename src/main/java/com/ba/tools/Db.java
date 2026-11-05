@@ -12,7 +12,7 @@ final class Db {
     static String url(String host, int port, String name) {
         return "jdbc:mysql://" + host + ":" + port + "/" + name
                 + "?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai"
-                + "&connectTimeout=20000&socketTimeout=600000&rewriteBatchedStatements=true";
+                + "&connectTimeout=20000&socketTimeout=600000&rewriteBatchedStatements=true&autoReconnect=true&tcpKeepAlive=true";
     }
 
     static Connection open(Args a) throws SQLException {
