@@ -221,18 +221,25 @@ public final class Backfill {
                         interval, rs.getLong(1), rs.getInt(2), isoDay(rs.getLong(3)), isoDay(rs.getLong(4)));
             }
         }
-        Map<String, Integer> days = new HashMap<>();
+        // 每币现有行数 + 最早一根：晚上市的币本来就不该有满窗口的根数，
+        // 用「它自己上市以来应该有多少根」当分母，否则会把新币永远判成"缺数据"。
+        Map<String, long[]> have = new HashMap<>();   // {count, firstOpenTime}
         try (PreparedStatement ps = cn.prepareStatement(
-                "SELECT symbol, COUNT(*) FROM klines WHERE `interval`=? GROUP BY symbol")) {
+                "SELECT symbol, COUNT(*), MIN(open_time) FROM klines WHERE `interval`=? GROUP BY symbol")) {
             ps.setString(1, interval);
-            try (ResultSet rs = ps.executeQuery()) { while (rs.next()) days.put(rs.getString(1), rs.getInt(2)); }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) have.put(rs.getString(1), new long[]{rs.getLong(2), rs.getLong(3)});
+            }
         }
+        long now = System.currentTimeMillis();
+        long needBars = (now - targetStart) / barMs;
         int need = 0, ok = 0, listedLater = 0;
-        long needBars = (System.currentTimeMillis() - targetStart) / barMs;
         for (String s : symbols) {
-            int have = days.getOrDefault(s, 0);
-            if (have >= needBars * 0.9) ok++;
-            else if (have == 0) listedLater++;
+            long[] h = have.get(s);
+            if (h == null) { listedLater++; continue; }
+            // 该死它有多少根 = min(目标窗口, 它上市至今)
+            long possible = Math.min(needBars, (now - h[1]) / barMs + 1);
+            if (h[0] >= possible * 0.9) ok++;
             else need++;
         }
         log("目标窗口约 %.0f 根/币", (double) needBars);
