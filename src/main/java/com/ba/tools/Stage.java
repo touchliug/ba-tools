@@ -246,7 +246,9 @@ final class Stage {
         double oiFromPeak = (oiPeak > 0 && !Double.isNaN(today.oi())) ? today.oi() / oiPeak - 1 : Double.NaN;
 
         // z-score：今日值相对"过去 90 天（不含今日）"的均值/标准差
-        double retZ = z(d, i, x -> x.close());
+        // retZ 必须是「日收益」的 z：用 x -> x.close() 得到的是价格水平的 z，
+        // 对从 0.59 跌到 0.23 再反弹的币，价格 z 只有 0.2，单日 +24% 会被丢掉。
+        double retZ = zRet(d, i);
         double volRatioZ = zRatio(d, i);
         double rangeZ = z(d, i, x -> x.low() > 0 ? (x.high() - x.low()) / x.low() : 0);
         double oiChgZ = zOi(d, i);
@@ -260,6 +262,26 @@ final class Stage {
     }
 
     private interface Fn { double get(Day d); }
+
+    /** 日收益的 z-score（相对过去 90 天的日收益分布）。 */
+    private static double zRet(List<Day> d, int i) {
+        int from = Math.max(1, i - Z_WINDOW);
+        double sum = 0, sq = 0;
+        int c = 0;
+        for (int j = from; j < i; j++) {
+            double prev = d.get(j - 1).close();
+            if (prev <= 0 || d.get(j).close() <= 0) continue;
+            double r = d.get(j).close() / prev - 1;
+            sum += r; sq += r * r; c++;
+        }
+        if (c < 20) return 0;
+        double mean = sum / c;
+        double var = sq / c - mean * mean;
+        if (var <= 0) return 0;
+        double prev = d.get(i - 1).close();
+        if (prev <= 0) return 0;
+        return (d.get(i).close() / prev - 1 - mean) / Math.sqrt(var);
+    }
 
     private static double z(List<Day> d, int i, Fn fn) {
         int from = Math.max(0, i - Z_WINDOW), to = i;
