@@ -5,3 +5,6 @@ out/
 .idea/
 *.iml
 reports/
+# 临时排查产物(单币复盘/探针输出), 不入库
+ain_review_*.md
+dbprobe_*.txt
